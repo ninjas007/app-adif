@@ -11,13 +11,120 @@ class AwardController extends Controller
 {
     public function index()
     {
-        $awards = Award::with('user_award')->get();
+        $awards = Award::with('usersAward')->get();
 
         $data['type_menu'] = 'award';
         $data['awards'] = $awards;
         $data['user'] = User::with('adif')->where('id', auth()->user()->id)->first();
 
         return view('award.index', $data);
+    }
+
+    public function create()
+    {
+        $data['type_menu'] = 'award';
+        $data['user'] = User::with('adif')->where('id', auth()->user()->id)->first();
+
+        return view('award.create', $data);
+    }
+
+    public function edit($id)
+    {
+        $data['type_menu'] = 'award';
+        $data['award'] = Award::find($id);
+        $data['user'] = User::with('adif')->where('id', auth()->user()->id)->first();
+
+        return view('award.edit', $data);
+    }
+
+    public function update($id, Request $request)
+    {
+        // Validasi input
+            $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string|max:255',
+            'image' => 'sometimes|file|image|max:2048',
+            'qso' => 'required|string',
+            'band' => 'required|string',
+            'mode' => 'required|string',
+            'member' => 'required|string',
+        ]);
+
+        // Membuat JSON dari inputan rules
+        $rules = json_encode([
+            'qso' => $request->input('qso'),
+            'band' => $request->input('band'),
+            'mode' => $request->input('mode'),
+            'member' => $request->input('member'),
+        ]);
+
+
+        $award = Award::find($id);
+
+        $award->name = $request->input('name');
+        $award->description = $request->input('description');
+        $award->rules = $rules;
+
+        // Menghandle upload file image jika ada
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images', 'public');
+            $award->path_image = $path;
+        }
+
+        // Menyimpan data ke database
+        $award->save();
+
+        return redirect('/award')->with('success', 'Award updated successfully');
+    }
+
+    public function destroy($id)
+    {
+        $award = Award::find($id);
+        $award->delete();
+
+        return redirect('/award')->with('success', 'Award deleted successfully');
+    }
+
+    public function store(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string|max:255',
+            'image' => 'sometimes|file|image|max:2048',
+            'qso' => 'required|string',
+            'band' => 'required|string',
+            'mode' => 'required|string',
+            'member' => 'required|string',
+        ]);
+
+        // Membuat JSON dari inputan rules
+        $rules = json_encode([
+            'qso' => $request->input('qso'),
+            'band' => $request->input('band'),
+            'mode' => $request->input('mode'),
+            'member' => $request->input('member'),
+        ]);
+
+        // Membuat instance baru Award
+        $award = new Award();
+        $award->name = $request->input('name');
+        $award->description = $request->input('description');
+        $award->rules = $rules;
+
+        // Menghandle upload file image jika ada
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images', 'public');
+            $award->path_image = $path;
+        } else {
+            $award->path_image = 'images/default.jpg';
+        }
+
+        // Menyimpan data ke database
+        $award->save();
+
+        // Redirect ke halaman yang diinginkan dengan pesan sukses
+        return redirect()->route('award.index')->with('success', 'Award berhasil disimpan.');
     }
 
     public function sync(Request $request)
@@ -41,6 +148,7 @@ class AwardController extends Controller
             foreach ($awards as $award) {
 
                 $ruleAward = json_decode($award->rules, true);
+
                 // check total qso
                 if (isset($ruleAward['qso'])) {
                     $countQsoAdif = $contents->count();
@@ -49,21 +157,44 @@ class AwardController extends Controller
                 // check band and qso
                 if (isset($ruleAward['band']) && $ruleAward['band'] != '') {
                     $countQsoAdif = $contents->filter(function ($item) use ($ruleAward) {
-                        $result = $item->band == strtoupper($ruleAward['band']) || $item->band == strtoupper($ruleAward['band']);
 
-                        // check mode
-                        if (isset($ruleAward['mode']) && $ruleAward['mode'] != '' && $ruleAward['mode'] != 'MIXED') {
-                            $result = $result && $item->mode == strtoupper($ruleAward['mode']) || $item->mode == strtoupper($ruleAward['mode']);
+                        $explodeBand = explode(',', $ruleAward['band']);
+                        $explodeMode = explode(',', $ruleAward['mode']);
+                        $resultBand = false;
+                        $resultMode = false;
+
+                        // check band
+                        if (count($explodeBand) > 0) {
+                            foreach ($explodeBand as $band) {
+                                if (strtoupper($item->band) == strtoupper($band)) {
+                                    $resultBand = true;
+                                    break;
+                                }
+                            }
                         }
 
-                        return $result;
+
+                        if (count($explodeMode) > 0) {
+                            foreach ($explodeMode as $mode) {
+                                if (strtoupper($item->mode) == strtoupper($mode)) {
+                                    $resultMode = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ($resultBand && $resultMode) {
+                            return true;
+                        }
+
+                        return false;
                     })
                     ->count();
                 }
 
                 if ($countQsoAdif > $ruleAward['qso']) {
                     $award->user_award()->updateOrCreate([
-                        'user_id' => auth()->user()->id,
+                        'user_id' => $userId,
                         'award_id' => $award->id
                     ]);
                 }

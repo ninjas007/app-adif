@@ -11,6 +11,11 @@ class Award extends Model
 
     public function user_award()
     {
-        return $this->hasOne(UserAward::class);
+        return $this->hasOne(UserAward::class, 'award_id', 'id');
+    }
+
+    public function usersAward()
+    {
+        return $this->hasMany(UserAward::class, 'award_id', 'id');
     }
 }

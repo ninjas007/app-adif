@@ -70,7 +70,16 @@ Route::middleware(['auth'])
 
     // award
     Route::prefix('award')->group(function () {
-        Route::get('/', [AwardController::class, 'index']);
+        Route::get('/', [AwardController::class, 'index'])->name('award.index');
         Route::post('/sync', [AwardController::class, 'sync'])->name('award.sync');
+
+        Route::middleware(['admin'])->group(function () {
+            Route::get('/create', [AwardController::class, 'create'])->name('admin.award.create');
+            Route::post('/store', [AwardController::class, 'store'])->name('admin.award.store');
+            Route::get('/edit/{id}', [AwardController::class, 'edit'])->name('admin.award.edit');
+            Route::post('/update/{id}', [AwardController::class, 'update'])->name('admin.award.update');
+            Route::get('/delete/{id}', [AwardController::class, 'destroy'])->name('admin.award.destroy');
+        });
+
     });
 });

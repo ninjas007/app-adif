@@ -63,9 +63,9 @@ class AdifController extends Controller
                 'qso_date' => removeSpace($match['qso_date']),
                 'time_on' => removeSpace($match['time_on']),
                 'band' => removeSpace($match['band']),
-                'freq' => removeSpace($match['freq']),
-                'mode' => removeSpace($match['mode']),
-                'operator' => removeSpace($match['operator']),
+                'freq' => isset($match['freq']) ? removeSpace($match['freq']) : null,
+                'mode' => isset($match['mode']) ? removeSpace($match['mode']) : null,
+                'operator' => isset($match['operator']) ? removeSpace($match['operator']) : null,
             ];
         }
 

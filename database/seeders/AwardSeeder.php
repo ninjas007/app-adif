@@ -18,7 +18,7 @@ class AwardSeeder extends Seeder
             [
                 'name' => 'Gold',
                 'description' => 'Gold Award',
-                'path_image' => 'gold.png',
+                'path_image' => 'images/default.jpg',
                 'rules' => json_encode([
                     'member' => 'Gold',
                     'band' => '40M',

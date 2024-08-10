@@ -16,6 +16,10 @@
         crossorigin="anonymous"
         referrerpolicy="no-referrer" />
 
+    // DataTable
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.3/css/dataTables.bootstrap4.css">
+
     @stack('style')
 
     <!-- Template CSS -->
@@ -75,6 +79,17 @@
 
     {{-- show password --}}
     <script src="{{ asset('js/js-password.js') }}"></script>
+
+    {{-- datatatables  --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.3/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.3/js/dataTables.bootstrap4.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('.datatable').DataTable();
+        });
+    </script>
 
     <script>
         @if (Session::has('success'))

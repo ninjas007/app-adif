@@ -1,20 +1,23 @@
 <div class="table-responsive">
-    <table class="table table-bordered table-striped">
+    <table class="table table-bordered datatable">
         <thead>
             <tr>
-                <th>Award</th>
+                <th>Image</th>
+                <th>Name</th>
                 <th>Description</th>
                 <th>Rules</th>
-                <th>Download</th>
+                <th class="text-center" style="width: 200px">Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($awards as $award)
                 <tr>
                     <td>
-                        <img src="{{ asset('storage/' . $award->image) }}" width="150"> <br>
-                        {{ $award->name }}
+                        <a href="{{ asset('storage/' . $award->path_image) }}" target="_blank">
+                            <img src="{{ asset('storage/' . $award->path_image) }}" width="100" height="100"> <br>
+                        </a>
                     </td>
+                    <td>{{ $award->name }}</td>
                     <td>{{ $award->description }}</td>
                     <td>
                         @if (!empty($award->rules))
@@ -29,16 +32,28 @@
                             N/A
                         @endif
                     </td>
-                    <td>
-                        @if (!empty($award->user_award))
-                            <a href="" class="btn btn-primary btn-sm">Download</a>
+                    <td class="text-center">
+                        @if (auth()->user()->role == 'admin')
+                            <a href="{{ route('admin.award.edit', $award->id) }}" class="btn btn-primary"
+                                title="Edit">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                            <a href="{{ route('admin.award.destroy', $award->id) }}" class="btn btn-danger"
+                                title="Delete">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                        @endif
+                        @if (!empty($award->usersAward))
+                            @if (in_array(auth()->user()->id, $award->usersAward->pluck('user_id')->toArray()))
+                                <a download="award.pdf" href="{{ asset('storage/' . $award->pdf) }}"
+                                    class="btn btn-primary" title="Download">
+                                    <i class="fa fa-download"></i>
+                                </a>
+                            @endif
                         @endif
                     </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="4" class="text-center">No Data</td>
-                </tr>
             @endforelse
 
         </tbody>
